@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+from __future__ import with_statement
+import os
+import re
+import random
+from math import log
+
+wordlist = "/usr/share/dict/american-english"
+
+def main():
+	if not os.path.isfile(wordlist):
+		raise Exception("Couldn't find wordlist: " + wordlist)
+
+	words = load_words(wordlist)
+
+	for x in range(10):
+		print pwgen(words)
+
+def pwgen(words, num_words=4):
+	pw = []
+	for x in range(num_words):
+		pw.append(random.choice(words))
+	return " ".join(pw)
+	
+
+
+# Don't want names, posessives, contractions, etc.
+simple_word_pat = re.compile(r"^[a-z]{2,5}$")
+
+def load_words(word_file):
+	words = []
+	with open(word_file) as f:
+		for line in f:
+			word = line.strip()
+			match = simple_word_pat.match(word)
+			if match:
+				words.append(word)
+
+	count = len(words)
+	bits = log(count)/log(2)
+	print "Loaded {count} words ({bits} bits each.)".format(count=count,bits=bits)
+
+	return words
+			
+
+
+if __name__ == "__main__":
+	main()
+
+

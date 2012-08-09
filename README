@@ -1,0 +1,27 @@
+pwphrase generates passphrases based on a list of words.
+
+These passphrases are easier to remember and harder to crack than
+traditional passwords.
+See: http://xkcd.com/936/
+
+Examples, for those not fully versed in regular expressions:
+
+1) Generate 5 password phrases: 
+pwphrase -n 5
+
+2) Generate phrases using proper nouns: 
+pwphrase --regex '^[A-Z][a-z]+$'
+
+3) Generate phrases of four-letter words: 
+pwphrase --regex '^[a-z]{4}'
+
+4) Generate phrases of words between 2 and 6 letters long:
+pwphrase --regex '^[a-z]{2,6}'
+
+5) Generate phrases of words that include "oy": 
+pwphrase --regex oy
+
+6) Generate phrases of words in your favorite language: 
+pwphrase -f /usr/share/dict/my-favorite-language 
+
+(Note the default regex is limited to a-z, so if your language has other characters you might want to use a more permissive regex.)  

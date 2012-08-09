@@ -1,51 +1,98 @@
 #!/usr/bin/env python
+""" pwphrase generates passphrases based on a list of words.
+
+These passphrases are easier to remember and harder to crack than
+traditional passwords.
+See: http://xkcd.com/936/
+"""
 
 from __future__ import with_statement
 import os
 import re
 import random
 from math import log
-
-wordlist = "/usr/share/dict/american-english"
+import sys
 
 def main():
+	wordlist = options.word_file
 	if not os.path.isfile(wordlist):
-		raise Exception("Couldn't find wordlist: " + wordlist)
+		print "Couldn't find wordlist: " + wordlist
+		sys.exit(1)
 
-	words = load_words(wordlist)
+	pattern = re.compile(options.regex)
+	words = load_words(wordlist, pattern)
+	if not words: 
+		msg = "No words in {file} matched regex: {regex}"
+		print msg.format(file=wordlist, regex=options.regex)
+		sys.exit(2)
+	
 
-	for x in range(10):
-		print pwgen(words)
+	count = len(words)
+	bits = log(count)/log(2)
+	msg = "Loaded {count} words ({bits:.2f} bits entropy each.)"
+	print msg.format(count=count,bits=bits)
 
-def pwgen(words, num_words=4):
+	num = options.num_words
+	msg = "Phrases of {num} words, {bits:.2f} bits total entropy."
+	print msg.format(num=num, bits=num*bits)
+	print ""
+	
+	for x in range(options.num_phrases):
+		print pwgen(words, options.num_words)
+
+def pwgen(words, num_words):
 	pw = []
 	for x in range(num_words):
 		pw.append(random.choice(words))
 	return " ".join(pw)
 	
 
-
-# Don't want names, posessives, contractions, etc.
-simple_word_pat = re.compile(r"^[a-z]{2,5}$")
-
-def load_words(word_file):
+def load_words(word_file, word_pattern):
 	words = []
 	with open(word_file) as f:
 		for line in f:
 			word = line.strip()
-			match = simple_word_pat.match(word)
+			match = word_pattern.search(word)
 			if match:
 				words.append(word)
 
-	count = len(words)
-	bits = log(count)/log(2)
-	print "Loaded {count} words ({bits} bits each.)".format(count=count,bits=bits)
-
 	return words
 			
+# Options!
+# Use Optparse for 2.6 compatibility:
+import optparse
+parser = optparse.OptionParser()
+parser.usage = __doc__
+parser.add_option("-n", "--num-phrases"
+	, dest="num_phrases", type="int", default=20
+	, help="How many password phrases to attempt to generate"
+)
+# By default, search for "simple" words w/o accents, capitalization
+# or apostrophes.
+parser.add_option("-r", "--regex"
+	, dest="regex", default=r"^[a-z]+$"
+	, help="Regular expression that candidate words must match"
+)
+parser.add_option("-w", "--words"
+	, dest="num_words", type="int", default=4
+	, help="How many words each phrase should contains."
+)
+parser.add_option("-f", "--word-file"
+	, dest="word_file", default="/usr/share/dict/american-english"
+	, help="File containing newline-seprated list of words."
+)
 
 
-if __name__ == "__main__":
-	main()
+
+(options, args) = parser.parse_args()
+
+if args:
+	print "Unknown option: " + args[0]
+	print
+	parser.print_help()
+	sys.exit(3)
+
+
+main()
 
 
